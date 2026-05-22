@@ -1,8 +1,9 @@
 import tkinter as tk
-root = tk.Tk()
+window = tk.Tk()
+window.title("ETP game")
 
 
 
 
 
-root.mainloop()
+window.mainloop()
