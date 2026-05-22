@@ -1,7 +1,8 @@
 import tkinter as tk
-root = tk.Tk()
+window = tk.Tk()
+window.title("ETP game")
 
 lbl = tk.Label(root, text="Hello World")
 lbl.pack()
 
-root.mainloop()
+window.mainloop()
