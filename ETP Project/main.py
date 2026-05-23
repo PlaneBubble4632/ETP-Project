@@ -4,72 +4,72 @@ import random
 window = ctk.CTk()
 window.geometry("1100x800")
 window.title("ETP game")
-window.configure(fg_color="lightblue")
-window.grid_columnconfigure(0, weight=1)
-window.grid_columnconfigure(1, weight=1)
+window.configure(fg_color="#88BACF")
 
 title = tk.Label(window, text="Entreprenuership Game Simulator", font=("Arial", 30))
 title.pack(pady=20)
 
-#main frame for labels
-top_frame = ctk.CTkFrame(
-    window, 
-    fg_color="lightblue",
-    width=500
-    )
-top_frame.place(
-    relx=0.5,        
-    rely=0.1,       
-    anchor="n"  
-)
+top_frame = ctk.CTkFrame(window, fg_color="#88BACF", width=900, height=90, corner_radius=12)
+top_frame.place(relx=0.5, rely=0.1, anchor="n")
+top_frame.grid_propagate(False)
 
-# Labels for money, reputation, and customer satisfaction
+# Distribute spacing evenly
+top_frame.grid_columnconfigure(0, weight=1)
+top_frame.grid_columnconfigure(1, weight=1)
+top_frame.grid_columnconfigure(2, weight=1)
+
+# ========================================================
+# 1. MONEY CARD WITH SHADOW
+# ========================================================
 money = 100
-money_frame = ctk.CTkFrame(
-    top_frame, 
-    fg_color="white",   
-    )
-money_frame.grid(row=0, column=0, padx=10)
-money_label = ctk.CTkLabel(
-    money_frame, 
-    text=f"Money: ${money}", 
-    font=("Arial", 25), 
-    text_color="black", 
-    fg_color="transparent", 
-    )
-money_label.pack(expand=True, pady=10, padx=10)
 
+# Container holds both the shadow and the card together in Column 0
+money_container = ctk.CTkFrame(top_frame, fg_color="transparent", width=220, height=65)
+money_container.grid(row=0, column=0, padx=10, pady=10)
+money_container.pack_propagate(False)
+
+# The White Card (Placed second, sitting directly on top)
+money_frame = ctk.CTkFrame(money_container, fg_color="white", corner_radius=10, border_width=3, border_color="#e4edf3")
+money_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93) # Lifted slightly up
+
+money_label = ctk.CTkLabel(money_frame, text=f"Money: ${money}", font=("Arial", 20, "bold"), text_color="#6d7e95")
+money_label.pack(expand=True)
+
+
+# ========================================================
+# 2. CUSTOMER SATISFACTION CARD WITH SHADOW
+# ========================================================
 customer_satisfaction = 10
-customer_satisfaction_frame = ctk.CTkFrame(
-    top_frame, 
-    fg_color="white", 
-    )
-customer_satisfaction_frame.grid(row=0, column=1, padx=10)
-customer_satisfaction_label = ctk.CTkLabel(
-    customer_satisfaction_frame, 
-    text=f"Customer Satisfaction: {customer_satisfaction}", 
-    font=("Arial", 25), 
-    text_color="black", 
-    fg_color="white", 
 
-    )
-customer_satisfaction_label.pack(expand=True, pady=10, padx=10)
+# Container in Column 1
+customer_container = ctk.CTkFrame(top_frame, fg_color="transparent", width=260, height=65)
+customer_container.grid(row=0, column=1, padx=10, pady=10)
+customer_container.pack_propagate(False)
 
+# The White Card
+cust_frame = ctk.CTkFrame(customer_container, fg_color="white", corner_radius=10, border_width=3, border_color="#e4edf3")
+cust_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93)
+
+customer_satisfaction_label = ctk.CTkLabel(cust_frame, text=f"Satisfaction: {customer_satisfaction}", font=("Arial", 20, "bold"), text_color="#6d7e95")
+customer_satisfaction_label.pack(expand=True)
+
+
+# ========================================================
+# 3. REPUTATION CARD WITH SHADOW
+# ========================================================
 reputation = 50
-reputation_frame = ctk.CTkFrame(
-    top_frame, 
-    fg_color="white", 
-    )
-reputation_frame.grid(row=0, column=2, padx=10)
-reputation_label = ctk.CTkLabel(
-    reputation_frame, 
-    text=f"Reputation: {reputation}", 
-    font=("Arial", 25), 
-    text_color="black", 
-    fg_color="white", 
-    )
-reputation_label.pack(expand=True, pady=10, padx=10)
 
+# Container in Column 2
+rep_container = ctk.CTkFrame(top_frame, fg_color="transparent", width=220, height=65)
+rep_container.grid(row=0, column=2, padx=10, pady=10)
+rep_container.pack_propagate(False)
+
+# The White Card
+rep_frame = ctk.CTkFrame(rep_container, fg_color="white", corner_radius=10, border_width=3, border_color="#e4edf3")
+rep_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93)
+
+reputation_label = ctk.CTkLabel(rep_frame, text=f"Reputation: {reputation}", font=("Arial", 20, "bold"), text_color="#6d7e95")
+reputation_label.pack(expand=True)
 
 #Randomizer for scenarios
 def random_scenario():
@@ -196,15 +196,17 @@ def hide_buttons():
     button2.pack_forget()
     button3.pack_forget()
 
+button_frame = ctk.CTkFrame(window, fg_color="#88BACF", width=900, height=90, corner_radius=12)
+button_frame.place(relx=0.5, rely=0.5, anchor="center")
+button_frame.grid_propagate(True)
 
+button1 = ctk.CTkButton(button_frame, text="Start Game", font=("Arial", 20), command=lambda:(hide_buttons(), random_scenario()),corner_radius=10, width=15, height=70)
+button1.pack(pady=50)
 
-button1 = tk.Button(window, text="Start Game", font=("Arial", 20), command=lambda:(hide_buttons(), random_scenario()), width=15)
-button1.pack(pady=40)
+button2 = ctk.CTkButton(button_frame, text="Quit", font=("Arial", 20), command=lambda:(window.destroy()), corner_radius=10, width=15, height=70)
+button2.pack(pady=70)
 
-button2 = tk.Button(window, text="Quit", font=("Arial", 20), command=lambda:(window.destroy()), width=15)
-button2.pack(pady=40)
-
-button3 = tk.Button(window, text="", font=("Arial", 20), command=ignore, width=15)
+button3 = ctk.CTkButton(button_frame, text="", font=("Arial", 20), command=ignore, corner_radius=10, width=15, height=70)
 
 scenario = tk.Label(window, text="", font=("Arial", 20))
 scenarios = [price_complaint, spilled_drink]
