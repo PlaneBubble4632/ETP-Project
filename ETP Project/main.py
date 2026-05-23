@@ -1,24 +1,75 @@
 import tkinter as tk
+import customtkinter as ctk
 import random
-window = tk.Tk()
+window = ctk.CTk()
 window.geometry("1100x800")
 window.title("ETP game")
+window.configure(fg_color="lightblue")
+window.grid_columnconfigure(0, weight=1)
+window.grid_columnconfigure(1, weight=1)
 
 title = tk.Label(window, text="Entreprenuership Game Simulator", font=("Arial", 30))
 title.pack(pady=20)
 
+#main frame for labels
+top_frame = ctk.CTkFrame(
+    window, 
+    fg_color="lightblue",
+    width=500
+    )
+top_frame.place(
+    relx=0.5,        
+    rely=0.1,       
+    anchor="n"  
+)
+
 # Labels for money, reputation, and customer satisfaction
 money = 100
-money_label = tk.Label(window, text=f"Money: ${money}", font=("Arial", 30))
-money_label.pack()
-
-reputation = 50
-reputation_label = tk.Label(window, text=f"Reputation: {reputation}", font=("Arial", 30))
-reputation_label.pack()
+money_frame = ctk.CTkFrame(
+    top_frame, 
+    fg_color="white",   
+    )
+money_frame.grid(row=0, column=0, padx=10)
+money_label = ctk.CTkLabel(
+    money_frame, 
+    text=f"Money: ${money}", 
+    font=("Arial", 25), 
+    text_color="black", 
+    fg_color="transparent", 
+    )
+money_label.pack(expand=True, pady=10, padx=10)
 
 customer_satisfaction = 10
-customer_satisfaction_label = tk.Label(window, text=f"Customer Satisfaction: {customer_satisfaction}", font=("Arial", 30))
-customer_satisfaction_label.pack()
+customer_satisfaction_frame = ctk.CTkFrame(
+    top_frame, 
+    fg_color="white", 
+    )
+customer_satisfaction_frame.grid(row=0, column=1, padx=10)
+customer_satisfaction_label = ctk.CTkLabel(
+    customer_satisfaction_frame, 
+    text=f"Customer Satisfaction: {customer_satisfaction}", 
+    font=("Arial", 25), 
+    text_color="black", 
+    fg_color="white", 
+
+    )
+customer_satisfaction_label.pack(expand=True, pady=10, padx=10)
+
+reputation = 50
+reputation_frame = ctk.CTkFrame(
+    top_frame, 
+    fg_color="white", 
+    )
+reputation_frame.grid(row=0, column=2, padx=10)
+reputation_label = ctk.CTkLabel(
+    reputation_frame, 
+    text=f"Reputation: {reputation}", 
+    font=("Arial", 25), 
+    text_color="black", 
+    fg_color="white", 
+    )
+reputation_label.pack(expand=True, pady=10, padx=10)
+
 
 #Randomizer for scenarios
 def random_scenario():
@@ -158,5 +209,4 @@ button3 = tk.Button(window, text="", font=("Arial", 20), command=ignore, width=1
 scenario = tk.Label(window, text="", font=("Arial", 20))
 scenarios = [price_complaint, spilled_drink]
 
-window.configure(bg="lightblue")
 window.mainloop()
