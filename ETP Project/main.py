@@ -6,10 +6,10 @@ window.geometry("1100x800")
 window.title("ETP game")
 window.configure(fg_color="#8ecae6")
 
-title = tk.Label(window, text="Entreprenuership Game Simulator", font=("Arial", 30))
+title = tk.Label(window, text="Entreprenuership Game Simulator", font=("Arial", 30, "bold"), bg="#8ecae6")
 title.pack(pady=20)
 
-top_frame = ctk.CTkFrame(window, fg_color="#00B3FF", width=900, height=90, corner_radius=12)
+top_frame = ctk.CTkFrame(window, fg_color="#8ecae6", width=900, height=90, corner_radius=12)
 top_frame.place(relx=0.5, rely=0.1, anchor="n")
 top_frame.grid_propagate(False)
 
@@ -47,7 +47,7 @@ customer_container.pack_propagate(False)
 cust_frame = ctk.CTkFrame(customer_container, fg_color="white", corner_radius=10, border_width=3, border_color="#e4edf3")
 cust_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93)
 
-customer_satisfaction_label = ctk.CTkLabel(cust_frame, text=f"Satisfaction: {customer_satisfaction}", font=("Arial", 20, "bold"), text_color="#6d7e95")
+customer_satisfaction_label = ctk.CTkLabel(cust_frame, text=f"Customer Satisfaction: {customer_satisfaction}", font=("Arial", 20, "bold"), text_color="#6d7e95")
 customer_satisfaction_label.pack(expand=True)
 
 
@@ -68,12 +68,19 @@ reputation_label.pack(expand=True)
 
 
 
+#Labels
+def update_label():
+    money_label.configure(text=f"Money: ${money}")
+    reputation_label.configure(text=f"Reputation: {reputation}")
+    customer_satisfaction_label.configure(text=f"Customer Satisfaction: {customer_satisfaction}")
+
+
+
 #Randomizer for scenarios
 def random_scenario():
     global scenarios
     if len(scenarios) == 0:
-
-        scenario.config(
+        scenario.configure(
             text="You completed all scenarios!"
         )
         hide_buttons()
@@ -85,36 +92,26 @@ def random_scenario():
 
 #Scenarios
 def price_complaint():
-    scenario.config(text="Scenario: Customer complains the drink is too expensive")
-    scenario.pack(pady=35)
-    button1.config(text="Lower Price", command=lower_price)
-    button1.pack(pady=40)
-    button2.config(text="Improve Quality", command=improve_quality)
-    button2.pack(pady=40)
-    button3.config(text="Ignore", command=ignore)
-    button3.pack(pady=40)
+    scenario.configure(text="Scenario: Customer complains the drink is too expensive")
+    button1.configure(text="Lower Price", command=lower_price)
+    button1.pack()
+    button2.configure(text="Improve Quality", command=improve_quality)
+    button2.pack()
+    button3.configure(text="Ignore", command=ignore)
+    button3.pack()
     global scenarios
     scenarios.remove(price_complaint)    
 
 def spilled_drink():
-    scenario.config(text="Scenario: Customer spilled their drink")
-    button1.config(text="Apologize and give compensation", wraplength=200, command=apologize_and_compensate)
-    button2.config(text="Scold the Customer", wraplength=200, command=scold_customer)
-    button3.config(text="Ignore", command=ignore)
-    scenario.pack(pady=35)
-    button1.pack(pady=20)
-    button2.pack(pady=20)
-    button3.pack(pady=20)
+    scenario.configure(text="Scenario: Customer spilled their drink")
+    button1.configure(text="Apologize and give compensation", command=apologize_and_compensate)
+    button2.configure(text="Scold the Customer", command=scold_customer)
+    button3.configure(text="Ignore", command=ignore)
+    button1.pack()
+    button2.pack()
+    button3.pack()
     global scenarios
     scenarios.remove(spilled_drink)
-
-
-
-#Labels
-def update_label():
-    money_label.config(text=f"Money: ${money}")
-    reputation_label.config(text=f"Reputation: {reputation}")
-    customer_satisfaction_label.config(text=f"Customer Satisfaction: {customer_satisfaction}")
 
 
 
@@ -125,7 +122,7 @@ def lower_price():
     global customer_satisfaction
     customer_satisfaction += 5
     update_label()
-    scenario.config(text="You lowered the price. Customers are happy but your profit is reduced.")
+    scenario.configure(text="You lowered the price. Customers are happy but your profit is reduced.")
     hide_buttons()
     window.after(5000, lambda: next_round())
 
@@ -135,7 +132,7 @@ def improve_quality():
     global reputation
     reputation += 10
     update_label()
-    scenario.config(text="You improved the quality. Customers are happy and your reputation improves.")
+    scenario.configure(text="You improved the quality. Customers are happy and your reputation improves.")
     hide_buttons()
     window.after(5000, lambda: next_round())
 
@@ -145,7 +142,7 @@ def ignore():
     global customer_satisfaction
     customer_satisfaction -= 10
     update_label()
-    scenario.config(text="You ignored the complaint. Customers are dissatisfied.")
+    scenario.configure(text="You ignored the complaint. Customers are dissatisfied.")
     hide_buttons()
     window.after(5000, lambda: next_round())
 
@@ -157,7 +154,7 @@ def apologize_and_compensate():
     global customer_satisfaction
     customer_satisfaction += 10
     update_label()
-    scenario.config(text="You apologized and gave compensation. Customers are very happy and your reputation improves.")
+    scenario.configure(text="You apologized and gave compensation. Customers are very happy and your reputation improves.")
     hide_buttons()
     window.after(5000, lambda: next_round())
 
@@ -167,7 +164,7 @@ def scold_customer():
     global customer_satisfaction
     customer_satisfaction -= 20
     update_label()
-    scenario.config(text="You scolded the customer. Customers are very dissatisfied and your reputation suffers.")
+    scenario.configure(text="You scolded the customer. Customers are very dissatisfied and your reputation suffers.")
     hide_buttons()
     window.after(5000, lambda: next_round())
 
@@ -175,7 +172,7 @@ def walk_away():
     global reputation
     reputation -= 10
     update_label()
-    scenario.config(
+    scenario.configure(
         text="You walked away. Customers lost trust in you.")
     hide_buttons()
     window.after(5000, lambda:next_round())
@@ -194,13 +191,19 @@ def hide_buttons():
     button2.pack_forget()
     button3.pack_forget()
 
+def change_color():
+    global container_two
+    container_two.configure(fg_color="#237864")
+
+#BUTTONS
+
 button_frame = ctk.CTkFrame(
     window, 
     fg_color="#8ecae6", 
     width=2000, 
     height=600
     )
-button_frame.place(relx=0.5, rely=0.32, anchor="n")
+button_frame.place(relx=0.5, rely=0.4, anchor="n")
 button_frame.grid_propagate(False)
 
 button_frame.grid_rowconfigure(0, weight=1)
@@ -213,18 +216,20 @@ button_frame.grid_rowconfigure(6, weight=1)
 button_frame.grid_rowconfigure(7, weight=1)
 button_frame.grid_rowconfigure(8, weight=1)
 button_frame.grid_rowconfigure(9, weight=1)
+button_frame.grid_rowconfigure(10, weight=1)
+
 button_frame.grid_columnconfigure(0, weight=1)
 
 #Button 1
 
 button1_container = ctk.CTkFrame(button_frame, fg_color="transparent")
-button1_container.grid(row=1, column=0, padx=10, pady= 10)
+button1_container.grid(row=2, column=0, padx=10, pady= 10)
 
 button1 = ctk.CTkButton(
     button1_container, 
     text="Start Game", 
     font=("Helvetica", 23, "bold"), 
-    command=lambda:(hide_buttons(), random_scenario()),
+    command=lambda:(hide_buttons(), random_scenario(), change_color()),
     fg_color="#0077b6",
     text_color="#bde0fe",
     height=70,
@@ -235,7 +240,7 @@ button1.pack()
 #Button 2
 
 button2_container = ctk.CTkFrame(button_frame, fg_color="transparent")
-button2_container.grid(row=2, column=0, padx=10, pady= 10)
+button2_container.grid(row=3, column=0, padx=10, pady= 10)
 
 button2 = ctk.CTkButton(
     button2_container, 
@@ -251,9 +256,62 @@ button2.pack()
 
 #Button 3
 
-button3 = tk.Button(button_frame, text="", font=("Arial", 20), command=ignore)
+button3_container = ctk.CTkFrame(button_frame, fg_color="transparent")
+button3_container.grid(row=4, column=0, padx=10, pady= 10)
 
-scenario = tk.Label(window, text="", font=("Arial", 20))
+button3 = ctk.CTkButton(
+    button3_container, 
+    text="", 
+    font=("Helvetica", 23, "bold"), 
+    fg_color="#0077b6",
+    text_color="#bde0fe",
+    height=70,
+    width=300
+)
+
+
+
+#Scenario
+
+scenario_place = ctk.CTkFrame(
+    window, 
+    fg_color="transparent",  
+    width=1000,           
+    height=125
+)
+scenario_place.place(relx=0.5, rely=0.3065, anchor="center")
+
+# ==========================================
+# 2. CONTAINER 1 (Inside Main Frame)
+# ==========================================
+container_one = ctk.CTkFrame(
+    scenario_place, 
+    fg_color="transparent",    
+)
+container_one.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+# ==========================================
+# 3. CONTAINER 2 (Inside Container 1)
+# ==========================================
+container_two = ctk.CTkFrame(
+    container_one, 
+    fg_color="transparent",    
+)
+container_two.place(relx=0.02, rely=0.1, relwidth=0.96, relheight=0.8)
+
+# ==========================================
+# 4. THE TEXT LABEL (Inside Container 2)
+# ==========================================
+scenario = ctk.CTkLabel(
+    container_two,
+    text="", 
+    font=("Helvetica", 23, "bold"), 
+    text_color="#bde0fe",
+    wraplength= 800
+)
+# Snaps the text to the dead center of Container 2
+scenario.place(relx=0.5, rely=0.5, anchor="center")
+
 scenarios = [price_complaint, spilled_drink]
 
 window.mainloop()
