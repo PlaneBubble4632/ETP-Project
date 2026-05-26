@@ -18,9 +18,6 @@ top_frame.grid_columnconfigure(0, weight=1)
 top_frame.grid_columnconfigure(1, weight=1)
 top_frame.grid_columnconfigure(2, weight=1)
 
-# ========================================================
-# 1. MONEY CARD WITH SHADOW
-# ========================================================
 money = 100
 
 # Container holds both the shadow and the card together in Column 0
@@ -35,10 +32,6 @@ money_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93) # Lifted slightly 
 money_label = ctk.CTkLabel(money_frame, text=f"Money: ${money}", font=("Arial", 20, "bold"), text_color="#6d7e95")
 money_label.pack(expand=True)
 
-
-# ========================================================
-# 2. CUSTOMER SATISFACTION CARD WITH SHADOW
-# ========================================================
 customer_satisfaction = 10
 
 # Container in Column 1
@@ -53,10 +46,6 @@ cust_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93)
 customer_satisfaction_label = ctk.CTkLabel(cust_frame, text=f"Satisfaction: {customer_satisfaction}", font=("Arial", 20, "bold"), text_color="#6d7e95")
 customer_satisfaction_label.pack(expand=True)
 
-
-# ========================================================
-# 3. REPUTATION CARD WITH SHADOW
-# ========================================================
 reputation = 50
 
 # Container in Column 2
