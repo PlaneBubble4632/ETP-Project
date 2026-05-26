@@ -4,12 +4,12 @@ import random
 window = ctk.CTk()
 window.geometry("1100x800")
 window.title("ETP game")
-window.configure(fg_color="#88BACF")
+window.configure(fg_color="#8ecae6")
 
 title = tk.Label(window, text="Entreprenuership Game Simulator", font=("Arial", 30))
 title.pack(pady=20)
 
-top_frame = ctk.CTkFrame(window, fg_color="#88BACF", width=900, height=90, corner_radius=12)
+top_frame = ctk.CTkFrame(window, fg_color="#00B3FF", width=900, height=90, corner_radius=12)
 top_frame.place(relx=0.5, rely=0.1, anchor="n")
 top_frame.grid_propagate(False)
 
@@ -17,6 +17,8 @@ top_frame.grid_propagate(False)
 top_frame.grid_columnconfigure(0, weight=1)
 top_frame.grid_columnconfigure(1, weight=1)
 top_frame.grid_columnconfigure(2, weight=1)
+
+
 
 money = 100
 
@@ -32,6 +34,8 @@ money_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93) # Lifted slightly 
 money_label = ctk.CTkLabel(money_frame, text=f"Money: ${money}", font=("Arial", 20, "bold"), text_color="#6d7e95")
 money_label.pack(expand=True)
 
+
+
 customer_satisfaction = 10
 
 # Container in Column 1
@@ -45,6 +49,8 @@ cust_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93)
 
 customer_satisfaction_label = ctk.CTkLabel(cust_frame, text=f"Satisfaction: {customer_satisfaction}", font=("Arial", 20, "bold"), text_color="#6d7e95")
 customer_satisfaction_label.pack(expand=True)
+
+
 
 reputation = 50
 
@@ -60,6 +66,8 @@ rep_frame.place(relx=0, rely=0, relwidth=1, relheight=0.93)
 reputation_label = ctk.CTkLabel(rep_frame, text=f"Reputation: {reputation}", font=("Arial", 20, "bold"), text_color="#6d7e95")
 reputation_label.pack(expand=True)
 
+
+
 #Randomizer for scenarios
 def random_scenario():
     global scenarios
@@ -74,6 +82,7 @@ def random_scenario():
     chosen_scenario()
 
 
+
 #Scenarios
 def price_complaint():
     scenario.config(text="Scenario: Customer complains the drink is too expensive")
@@ -85,8 +94,7 @@ def price_complaint():
     button3.config(text="Ignore", command=ignore)
     button3.pack(pady=40)
     global scenarios
-    scenarios.remove(price_complaint)
-    
+    scenarios.remove(price_complaint)    
 
 def spilled_drink():
     scenario.config(text="Scenario: Customer spilled their drink")
@@ -99,6 +107,7 @@ def spilled_drink():
     button3.pack(pady=20)
     global scenarios
     scenarios.remove(spilled_drink)
+
 
 
 #Labels
@@ -185,17 +194,64 @@ def hide_buttons():
     button2.pack_forget()
     button3.pack_forget()
 
-button_frame = ctk.CTkFrame(window, fg_color="#88BACF", width=900, height=90, corner_radius=12)
-button_frame.place(relx=0.5, rely=0.5, anchor="center")
-button_frame.grid_propagate(True)
+button_frame = ctk.CTkFrame(
+    window, 
+    fg_color="#8ecae6", 
+    width=2000, 
+    height=600
+    )
+button_frame.place(relx=0.5, rely=0.32, anchor="n")
+button_frame.grid_propagate(False)
 
-button1 = ctk.CTkButton(button_frame, text="Start Game", font=("Arial", 20), command=lambda:(hide_buttons(), random_scenario()),corner_radius=10, width=15, height=70)
-button1.pack(pady=50)
+button_frame.grid_rowconfigure(0, weight=1)
+button_frame.grid_rowconfigure(1, weight=1)
+button_frame.grid_rowconfigure(2, weight=1)
+button_frame.grid_rowconfigure(3, weight=1)
+button_frame.grid_rowconfigure(4, weight=1)
+button_frame.grid_rowconfigure(5, weight=1)
+button_frame.grid_rowconfigure(6, weight=1)
+button_frame.grid_rowconfigure(7, weight=1)
+button_frame.grid_rowconfigure(8, weight=1)
+button_frame.grid_rowconfigure(9, weight=1)
+button_frame.grid_columnconfigure(0, weight=1)
 
-button2 = ctk.CTkButton(button_frame, text="Quit", font=("Arial", 20), command=lambda:(window.destroy()), corner_radius=10, width=15, height=70)
-button2.pack(pady=70)
+#Button 1
 
-button3 = ctk.CTkButton(button_frame, text="", font=("Arial", 20), command=ignore, corner_radius=10, width=15, height=70)
+button1_container = ctk.CTkFrame(button_frame, fg_color="transparent")
+button1_container.grid(row=1, column=0, padx=10, pady= 10)
+
+button1 = ctk.CTkButton(
+    button1_container, 
+    text="Start Game", 
+    font=("Helvetica", 23, "bold"), 
+    command=lambda:(hide_buttons(), random_scenario()),
+    fg_color="#0077b6",
+    text_color="#bde0fe",
+    height=70,
+    width=300
+)
+button1.pack()
+
+#Button 2
+
+button2_container = ctk.CTkFrame(button_frame, fg_color="transparent")
+button2_container.grid(row=2, column=0, padx=10, pady= 10)
+
+button2 = ctk.CTkButton(
+    button2_container, 
+    text="Quit", 
+    font=("Helvetica", 23, "bold"), 
+    command=lambda:(window.destroy()),
+    fg_color="#0077b6",
+    text_color="#bde0fe",
+    height=70,
+    width=300
+)
+button2.pack()
+
+#Button 3
+
+button3 = tk.Button(button_frame, text="", font=("Arial", 20), command=ignore)
 
 scenario = tk.Label(window, text="", font=("Arial", 20))
 scenarios = [price_complaint, spilled_drink]
