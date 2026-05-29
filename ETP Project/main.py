@@ -1,10 +1,34 @@
 import tkinter as tk
 import customtkinter as ctk
 import random
+import pygame
+import os
+BASE_DIR = os.path.dirname(__file__)
 window = ctk.CTk()
 window.geometry("1100x800")
 window.title("ETP game")
 window.configure(fg_color="#8ecae6")
+
+#Audios (to run inside program something.play())
+pygame.mixer.init()
+
+click_sound = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "freesoundeffects-button-click-289742.wav"))
+
+lose_sound = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "u_l5xum8z250-losing-horn-313723.wav"))
+
+win_sound = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "u_ss015dykrt-brass-fanfare-with-timpani-and-winchimes-reverberated-146260.wav"))
+
+menu_sound = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "dragon-studio-menu-open-sound-effect-432999.wav"))
+
+status_sound = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "freesound_community-menu-button-89141.wav"))
+
+click_sound.set_volume(0.2)
+lose_sound.set_volume(0.3)
+win_sound.set_volume(0.3)
+menu_sound.set_volume(0.2)
+status_sound.set_volume(0.2)
+
+window.bind("<Button-1>", lambda event: click_sound.play())
 
 title = tk.Label(window, text="Entreprenuership Game Simulator", font=("Arial", 30, "bold"), bg="#8ecae6")
 title.pack(pady=20)
@@ -39,7 +63,7 @@ money_label.pack(expand=True)
 customer_satisfaction = 10
 
 # Container in Column 1
-customer_container = ctk.CTkFrame(top_frame, fg_color="transparent", width=260, height=65)
+customer_container = ctk.CTkFrame(top_frame, fg_color="transparent", width=290, height=65)
 customer_container.grid(row=0, column=1, padx=10, pady=10)
 customer_container.pack_propagate(False)
 
@@ -83,7 +107,7 @@ def random_scenario():
         scenario.configure(
             text="You completed all scenarios!"
         )
-        hide_buttons()
+        hide_buttons_end()
         return
     chosen_scenario = random.choice(scenarios)
     chosen_scenario()
@@ -93,89 +117,99 @@ def random_scenario():
 #Scenarios
 def price_complaint():
     scenario.configure(text="Scenario: Customer complains the drink is too expensive")
-    button1.configure(text="Lower Price", command=lower_price)
-    button1.pack()
-    button2.configure(text="Improve Quality", command=improve_quality)
-    button2.pack()
-    button3.configure(text="Ignore", command=ignore)
-    button3.pack()
+    button1.configure(text="Lower Price", command=lambda: lower_price(-10, +5, 0))
+    button2.configure(text="Improve Quality", command=lambda: improve_quality(-20, 0, +10))
+    button3.configure(text="Ignore", command=lambda: ignore(0, -10, -20))
     global scenarios
     scenarios.remove(price_complaint)    
 
 def spilled_drink():
     scenario.configure(text="Scenario: Customer spilled their drink")
-    button1.configure(text="Apologize and give compensation", command=apologize_and_compensate)
-    button2.configure(text="Scold the Customer", command=scold_customer)
-    button3.configure(text="Ignore", command=ignore)
-    button1.pack()
-    button2.pack()
-    button3.pack()
+    button1.configure(text="Apologize and give compensation", command=lambda: apologize_and_compensate(-30, +10, +15))
+    button2.configure(text="Scold the Customer", command=lambda: scold_customer(0, -20, -30))
+    button3.configure(text="Walk Away", command=lambda: walk_away(0, 0, -10))
     global scenarios
     scenarios.remove(spilled_drink)
 
 
 
 #Actions
-def lower_price():
+change_m = 0
+change_c = 0
+change_r = 0
+
+def lower_price(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
     global money
-    money -= 10
+    money += change_m
     global customer_satisfaction
-    customer_satisfaction += 5
+    customer_satisfaction += change_c
     update_label()
     scenario.configure(text="You lowered the price. Customers are happy but your profit is reduced.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    window.after(7000, lambda: next_round())
 
-def improve_quality():
+def improve_quality(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
     global money
-    money -= 20
+    money += change_m
     global reputation
-    reputation += 10
+    reputation += change_r
     update_label()
     scenario.configure(text="You improved the quality. Customers are happy and your reputation improves.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    window.after(7000, lambda: next_round())
 
-def ignore():
-    global reputation
-    reputation -= 20
+def ignore(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
     global customer_satisfaction
-    customer_satisfaction -= 10
+    customer_satisfaction += change_c
+    global reputation
+    reputation += change_r
     update_label()
     scenario.configure(text="You ignored the complaint. Customers are dissatisfied.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    window.after(7000, lambda: next_round())
 
-def apologize_and_compensate():
+def apologize_and_compensate(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
     global money
-    money -= 30
-    global reputation
-    reputation += 15
+    money += change_m
     global customer_satisfaction
-    customer_satisfaction += 10
+    customer_satisfaction += change_c
+    global reputation
+    reputation += change_r
     update_label()
     scenario.configure(text="You apologized and gave compensation. Customers are very happy and your reputation improves.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    window.after(7000, lambda: next_round())
 
-def scold_customer():
-    global reputation
-    reputation -= 30
+def scold_customer(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
     global customer_satisfaction
-    customer_satisfaction -= 20
+    customer_satisfaction += change_c
+    global reputation
+    reputation += change_r
     update_label()
     scenario.configure(text="You scolded the customer. Customers are very dissatisfied and your reputation suffers.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    window.after(7000, lambda: next_round())
 
-def walk_away():
+def walk_away(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
     global reputation
-    reputation -= 10
+    reputation += change_r
     update_label()
     scenario.configure(
         text="You walked away. Customers lost trust in you.")
     hide_buttons()
-    window.after(5000, lambda:next_round())
+    window.after(7000, lambda:next_round())
+
+def changes(money_stat, customer_stat, reputation_stat):
+    global change_m, change_c, change_r
+    change_m = money_stat
+    change_c = customer_stat
+    change_r = reputation_stat
 
 def enable_button():
     button1.pack()
@@ -186,14 +220,162 @@ def next_round():
     enable_button()
     random_scenario()
 
-def hide_buttons():
+def hide_buttons_end():
     button1.pack_forget()
     button2.pack_forget()
     button3.pack_forget()
 
+def hide_buttons():
+    button1.pack_forget()
+    button2.pack_forget()
+    button3.pack_forget()
+    status_change()
+
 def change_color():
     global container_two
     container_two.configure(fg_color="#237864")
+
+#Status Change
+
+def status_change():
+    status_place = ctk.CTkFrame(
+        window,
+        fg_color="#8ecae6",
+        width=700,
+        height=150,
+        corner_radius=8,
+        border_width=4,
+        border_color="#101729"
+    )
+    status_place.place(relx=0.5, rely=0.55, anchor="center")
+    status_place.grid_propagate(False)
+
+    status_place.grid_columnconfigure(0, weight=1)
+    status_place.grid_columnconfigure(1, weight=1)
+    status_place.grid_columnconfigure(2, weight=1)
+    status_place.grid_rowconfigure(0, weight=1)
+    status_place.grid_rowconfigure(1, weight=1)
+    status_place.grid_rowconfigure(2, weight=1)
+
+    global change_m, change_c, change_r
+
+    status_container_money = ctk.CTkFrame(status_place, fg_color="transparent", width=170, height=50)
+    status_container_money.grid(row=1, column=0, padx=10)
+
+    status_container_customer = ctk.CTkFrame(status_place, fg_color="transparent", width=300, height=50)
+    status_container_customer.grid(row=1, column=1, padx=10)
+
+    status_container_reputation = ctk.CTkFrame(status_place, fg_color="transparent", width=200, height=50)
+    status_container_reputation.grid(row=1, column=2, padx=10)
+
+    #Money Status
+
+    if change_m < 0:
+        status_frame_money = ctk.CTkFrame(
+            status_container_money, 
+            fg_color="#fcecec",
+            border_width=2,
+            border_color="#fac9cb"
+            )
+        status_frame_money.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_money = ctk.CTkLabel(
+            status_frame_money, 
+            text=f"{change_m} Money", 
+            font=("Helvetica", 18, "bold"), 
+            text_color="#fb4b4b",
+            )
+        status_label_money.place(relx=0.5, rely=0.5, anchor="center")
+    elif change_m > 0:
+        status_frame_money = ctk.CTkFrame(
+            status_container_money, 
+            fg_color="#e8faee",
+            border_width=2,
+            border_color="#bfeed2"
+            )
+        status_frame_money.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_money = ctk.CTkLabel(
+            status_frame_money, 
+            text=f"+{change_m} Money", 
+            font=("Helvetica", 18, "bold"), 
+            text_color="#23c463",
+            )
+        status_label_money.place(relx=0.5, rely=0.5, anchor="center")
+
+    #Customer Satisfaction
+
+    if change_c < 0:
+        status_frame_customer = ctk.CTkFrame(
+            status_container_customer, 
+            fg_color="#fcecec",
+            border_width=2,
+            border_color="#fac9cb"
+            )
+        status_frame_customer.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_customer = ctk.CTkLabel(
+            status_frame_customer, 
+            text=f"{change_c} Customer Satisfaction", 
+            font=("Helvetica", 18, "bold"), 
+            text_color="#fb4b4b",
+            )
+        status_label_customer.place(relx=0.5, rely=0.5, anchor="center")
+
+    elif change_c > 0:
+        status_frame_customer = ctk.CTkFrame(
+            status_container_customer, 
+            fg_color="#e8faee",
+            border_width=2,
+            border_color="#bfeed2"
+            )
+        status_frame_customer.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_customer = ctk.CTkLabel(
+            status_frame_customer, 
+            text=f"+{change_c} Customer Satisfaction", 
+            font=("Helvetica", 18, "bold"), 
+            text_color="#23c463",
+            )
+        status_label_customer.place(relx=0.5, rely=0.5, anchor="center")
+
+    #Reputation
+
+    if change_r < 0:
+        status_frame_reputation = ctk.CTkFrame(
+            status_container_reputation, 
+            fg_color="#fcecec",
+            border_width=2,
+            border_color="#fac9cb"
+            )
+        status_frame_reputation.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_reputation = ctk.CTkLabel(
+            status_frame_reputation, 
+            text=f"{change_r} Reputation", 
+            font=("Helvetica", 18, "bold"), 
+            text_color="#fb4b4b",
+            )
+        status_label_reputation.place(relx=0.5, rely=0.5, anchor="center")
+
+    elif change_r > 0:
+        status_frame_reputation = ctk.CTkFrame(
+            status_container_reputation, 
+            fg_color="#e8faee",
+            border_width=2,
+            border_color="#bfeed2"
+            )
+        status_frame_reputation.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_reputation = ctk.CTkLabel(
+            status_frame_reputation, 
+            text=f"+{change_r} Reputation", 
+            font=("Helvetica", 18, "bold"), 
+            text_color="#23c463",
+            )
+        status_label_reputation.place(relx=0.5, rely=0.5, anchor="center")
+
+    status_place.after(4500, lambda: status_place.destroy())
 
 #BUTTONS
 
@@ -229,7 +411,7 @@ button1 = ctk.CTkButton(
     button1_container, 
     text="Start Game", 
     font=("Helvetica", 23, "bold"), 
-    command=lambda:(hide_buttons(), random_scenario(), change_color()),
+    command=lambda:(random_scenario(), change_color(), menu_sound.play(), enable_button()),
     fg_color="#0077b6",
     text_color="#bde0fe",
     height=70,
@@ -246,7 +428,7 @@ button2 = ctk.CTkButton(
     button2_container, 
     text="Quit", 
     font=("Helvetica", 23, "bold"), 
-    command=lambda:(window.destroy()),
+    command=lambda:(window.destroy(), click_sound.play()),
     fg_color="#0077b6",
     text_color="#bde0fe",
     height=70,
@@ -309,6 +491,7 @@ scenario = ctk.CTkLabel(
     text_color="#bde0fe",
     wraplength= 800
 )
+
 # Snaps the text to the dead center of Container 2
 scenario.place(relx=0.5, rely=0.5, anchor="center")
 
