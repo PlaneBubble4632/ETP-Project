@@ -908,7 +908,7 @@ scenarios = [
 #Button for back to menu (appears after game over)
 
 def back_to_menu():
-    scenario.configure(text="Press Restart Game to play again!", fg_color="#0E3386")
+    scenario.configure(text="Press Restart Game to play again!")
     container_two.configure(fg_color="transparent")
 
     button1.configure(
@@ -923,11 +923,8 @@ def back_to_menu():
         command=quit
     )
 
-    if not button1.winfo_ismapped():
-        button1.pack()
-
-    if not button2.winfo_ismapped():
-        button2.pack()
+    button1.pack()
+    button2.pack()
     button3.pack_forget()
 
 def start_new_game():
