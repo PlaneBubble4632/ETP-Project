@@ -3,7 +3,14 @@ import customtkinter as ctk
 import random
 import pygame
 import os
-BASE_DIR = os.path.dirname(__file__)
+import sys
+
+if getattr(sys, 'frozen', False):
+    BASE_DIR = sys._MEIPASS
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
 window = ctk.CTk()
 window.geometry("1100x800")
 window.title("ETP game")
@@ -30,7 +37,7 @@ status_sound.set_volume(0.2)
 
 window.bind("<Button-1>", lambda event: click_sound.play())
 
-title = tk.Label(window, text="Entreprenuership Game Simulator", font=("Arial", 30, "bold"), bg="#8ecae6")
+title = tk.Label(window, text="Entrepreneurship Game Simulator", font=("Arial", 30, "bold"), bg="#8ecae6")
 title.pack(pady=20)
 
 top_frame = ctk.CTkFrame(window, fg_color="#8ecae6", width=900, height=90, corner_radius=12)
@@ -60,7 +67,7 @@ money_label.pack(expand=True)
 
 
 
-customer_satisfaction = 10
+customer_satisfaction = 50
 
 # Container in Column 1
 customer_container = ctk.CTkFrame(top_frame, fg_color="transparent", width=290, height=65)
@@ -91,27 +98,45 @@ reputation_label = ctk.CTkLabel(rep_frame, text=f"Reputation: {reputation}", fon
 reputation_label.pack(expand=True)
 
 
-
-#Labels
 def update_label():
+    global money, reputation, customer_satisfaction
+
+    money = max(0, money)
+    reputation = max(0, reputation)
+    customer_satisfaction = max(0, customer_satisfaction)
+
     money_label.configure(text=f"Money: ${money}")
     reputation_label.configure(text=f"Reputation: {reputation}")
-    customer_satisfaction_label.configure(text=f"Customer Satisfaction: {customer_satisfaction}")
+    customer_satisfaction_label.configure(
+        text=f"Customer Satisfaction: {customer_satisfaction}"
+    )
 
-
+after_ids = []
 
 #Randomizer for scenarios
 def random_scenario():
     global scenarios
+    reset_choice_buttons()
     if len(scenarios) == 0:
         scenario.configure(
             text="You completed all scenarios!"
         )
+        win_sound.play()
         hide_buttons_end()
-        window.after(5000, back_to_menu)
+        after_ids.append(window.after(5000, back_to_menu))
+        return
+
+        # 20% chance of minigame
+    global minigame_used
+
+    if not minigame_used and random.randint(1, 5) == 1:
+        minigame_used = True
+        start_minigame()
+        return
+
+
     chosen_scenario = random.choice(scenarios)
     chosen_scenario()
-
 
 
 #Scenarios
@@ -135,7 +160,7 @@ def complains():
     scenario.configure(text="Scenario: A karen immediately jumps in the store to complain about how the cafe ruins the beautiful view of the street.")
     button1.configure(text="Kick her out", command=lambda: kick_out(-20, 0, +20))
     button2.configure(text="Give her free drink", command=lambda: free_drink(-5, 0, 0))
-    button3.configure(text="Ignore", command=lambda: ignore(-10, 0, +10))
+    button3.configure(text="Ignore", command=lambda: ignore_karen(-10, 0, +10))
     global scenarios
     scenarios.remove(complains)
 
@@ -156,50 +181,81 @@ def toddler():
     scenarios.remove(toddler)
 
 def salty():
-    scenario.configure(text="Scenario: A toddler went on a tantrum and spills drinks everywhere, disrupting other customers.")
-    button1.configure(text="Adjust Recipe", command=lambda: reprimand(-10, +10, +15))
-    button2.configure(text="Give Extra Salt Dip", command=lambda: fine(-5, +10, +5))
-    button3.configure(text="Ignore", command=lambda: family(0, -5, 0))
+    scenario.configure(text="Scenario: Someone complains your salt bread isn't salty enough.")
+    button1.configure(text="Adjust Recipe", command=lambda: adjust_recipe(-10, +10, +15))
+    button2.configure(text="Give Extra Salt Dip", command=lambda: salt_dip(-5, +10, +5))
+    button3.configure(text="Ignore", command=lambda: ignore(0, -5, 0))
     global scenarios
     scenarios.remove(salty)
 
 def lamp():
     scenario.configure(text="Scenario: The ceiling lamp above just went out. As an employee, what are you going to do?")
-    button1.configure(text="Replace the Ball Lamp", command=lambda: reprimand(-15, +10, +5))
-    button2.configure(text="Use a Dim Spare one", command=lambda: fine(-5, -5, 0))
-    button3.configure(text="Ignore", command=lambda: family(0, -5, -5))
+    button1.configure(text="Replace the Ball Lamp", command=lambda: replace(-15, +10, +5))
+    button2.configure(text="Use a Dim Spare one", command=lambda: spare(-5, -5, 0))
+    button3.configure(text="Ignore", command=lambda: ignore(0, -5, -5))
     global scenarios
     scenarios.remove(lamp)
 
 def newt():
     scenario.configure(text="Scenario: Just as you were about to enjoy your day, a random newt just fell onto a customer's plate.")
-    button1.configure(text="Compensate", command=lambda: reprimand(-10, +15, +10))
-    button2.configure(text="Only Apologize", command=lambda: fine(0, -5, 0))
-    button3.configure(text="Focus on Other Customers", command=lambda: family(-20, +25, -10))
+    button1.configure(text="Compensate", command=lambda: apologize_and_compensate(-10, +15, +10))
+    button2.configure(text="Only Apologize", command=lambda: only_apologize(0, -5, 0))
+    button3.configure(text="Focus on Other Customers", command=lambda: focus(-20, +25, -10))
     global scenarios
     scenarios.remove(newt)
 
 clicks = 0
-def start_minigame():
-    global clicks, scenario
+time_left = 5
+minigame_used = False
+game_ended = False
 
+def start_minigame():
+    global clicks, scenario, time_left
+    clicks = 0
+    time_left = 5
     scenario.configure(
-        text="RUSH HOUR! Click the button as fast as possible!"
+        text=f"RUSH HOUR!\nTime Left: {time_left}\nCustomers Served: {clicks}"
     )
 
     button1.configure(
         text="SERVE CUSTOMER",
         command=click_customer
+    )   
+    button1.pack()
+    button2.pack_forget()
+    button3.pack_forget()
+    countdown()
+    after_ids.append(window.after(5000, end_minigame))
+
+def end_minigame():
+    global money
+
+    reward = min(clicks * 2, 100)
+
+    money += reward
+
+    update_label()
+
+    scenario.configure(
+        text=f"Rush Hour Ended!\nYou served {clicks} customers.\nEarned ${reward}!"
     )
 
-    scenario.place(relx=0.5, rely=0.5, anchor="center")
-    button1.pack()
-    button2.destroy()
-    button3.destroy()
+    button1.pack_forget()
 
-    window.after(5000, end_minigame)
+    after_ids.append(window.after(3000, next_round))
 
+def countdown():
+    global time_left
 
+    if time_left > 0:
+
+        scenario.configure(
+            text=f"RUSH HOUR!\nTime Left: {time_left}\nCustomers Served: {clicks}"
+        )
+
+        time_left -= 1
+
+        window.after(1000, countdown)
 
 #Actions
 
@@ -214,24 +270,80 @@ def click_customer():
     clicks += 1
 
     scenario.configure(
-        text=f"Customers served: {clicks}"
+        text=f"RUSH HOUR!\nTime Left: {time_left}\nCustomers Served: {clicks}"
     )
 
-def end_minigame():
+def focus(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
+    global money, reputation, customer_satisfaction
 
-    global money
-
-    reward = clicks * 3
-
-    money += reward
-
+    money += change_m
+    reputation += change_r
+    customer_satisfaction += change_c
     update_label()
+    scenario.configure(text="You instead focused on the other customers. Your reputation decreases so does your money.")
+    hide_buttons()
+    after_ids.append(window.after(5000, lambda: next_round()))
 
-    scenario.configure(
-        text=f"Rush hour ended! You earned ${reward}"
-    )
+def only_apologize(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
+    global money, reputation, customer_satisfaction
 
-    window.after(3000, next_round)
+    money += change_m
+    reputation += change_r
+    customer_satisfaction += change_c
+    update_label()
+    scenario.configure(text="You only apologized. They say nothing and leave.")
+    hide_buttons()
+    after_ids.append(window.after(5000, lambda: next_round()))
+
+def spare(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
+    global money, reputation, customer_satisfaction
+
+    money += change_m
+    reputation += change_r
+    customer_satisfaction += change_c
+    update_label()
+    scenario.configure(text="You used the spare one. Making you use money to fix it, and that alone isnt bright enough.")
+    hide_buttons()
+    after_ids.append(window.after(5000, lambda: next_round()))
+
+def replace(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
+    global money, reputation, customer_satisfaction
+
+    money += change_m
+    reputation += change_r
+    customer_satisfaction += change_c
+    update_label()
+    scenario.configure(text="You replaced the ball lamp. Now it's bright.")
+    hide_buttons()
+    after_ids.append(window.after(5000, lambda: next_round()))
+
+def salt_dip(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
+    global money, reputation, customer_satisfaction
+
+    money += change_m
+    reputation += change_r
+    customer_satisfaction += change_c
+    update_label()
+    scenario.configure(text="You gave salt dip. Cost you some money, but atleast you got a smile in return!")
+    hide_buttons()
+    after_ids.append(window.after(5000, lambda: next_round()))
+
+def adjust_recipe(money_stat, customer_stat, reputation_stat):
+    changes(money_stat, customer_stat, reputation_stat)
+    global money, reputation, customer_satisfaction
+
+    money += change_m
+    reputation += change_r
+    customer_satisfaction += change_c
+    update_label()
+    scenario.configure(text="You adjusted the recipe. Lose some to gain some")
+    hide_buttons()
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def family(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -241,7 +353,7 @@ def family(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You scolded the family. Customers are very dissatisfied and your reputation suffers.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def fine(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -251,7 +363,7 @@ def fine(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You fined the customer. Customers are happy and your profit increases.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def reprimand(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -261,22 +373,31 @@ def reprimand(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You reprimanded the customer. Customers are happy and your reputation improves.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def proof(money_stat, customer_stat, reputation_stat):
-    changes(money_stat, customer_stat, reputation_stat)
-    global reputation
+    global reputation, change_m, change_c, change_r
+
+    change_m = 0
+    change_c = 0
+
     if reputation >= 30:
-        change_r = +20
-        reputation += change_r
+        change_r = 20
+        scenario.configure(
+            text="The cop believes you. Your reputation improves."
+        )
     else:
         change_r = -20
-        reputation += change_r
+        scenario.configure(
+            text="The cop doesn't believe you. Your reputation suffers."
+        )
+
+    reputation += change_r
+
     update_label()
-    scenario.configure(text="You showed your good rep as proof. Customers are happy and your reputation improves.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
-    
+    after_ids.append(window.after(5000, next_round))
+
 def bribe(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
     global money, reputation
@@ -285,7 +406,7 @@ def bribe(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You bribed the cop. Customers are dissatisfied and your reputation suffers.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
     
 def disagree(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -294,7 +415,7 @@ def disagree(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You disagreed with the accusation. Customers are happy and your reputation improves.") ############################
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def ignore_karen(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -304,7 +425,7 @@ def ignore_karen(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You ignored the karen. Customers are dissatisfied and your reputation suffers.") #####################
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def free_drink(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -314,7 +435,7 @@ def free_drink(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You gave the customer a free drink. Customers are happy but your profit is reduced.") ##########################
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def kick_out(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -323,9 +444,9 @@ def kick_out(money_stat, customer_stat, reputation_stat):
     global reputation
     reputation += change_r
     update_label()
-    scenario.configure(text="You kicked out the customer. Customers are happy but your reputation suffers.")
+    scenario.configure(text="You kicked out the customer. Some customers appreciate your action and your reputation improves.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def lower_price(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -336,7 +457,7 @@ def lower_price(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You lowered the price. Customers are happy but your profit is reduced.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def improve_quality(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -347,7 +468,7 @@ def improve_quality(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You improved the quality. Customers are happy and your reputation improves.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def ignore(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -358,7 +479,7 @@ def ignore(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You ignored the complaint. Customers are dissatisfied.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def apologize_and_compensate(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -371,7 +492,7 @@ def apologize_and_compensate(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You apologized and gave compensation. Customers are very happy and your reputation improves.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def scold_customer(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -382,7 +503,7 @@ def scold_customer(money_stat, customer_stat, reputation_stat):
     update_label()
     scenario.configure(text="You scolded the customer. Customers are very dissatisfied and your reputation suffers.")
     hide_buttons()
-    window.after(5000, lambda: next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def walk_away(money_stat, customer_stat, reputation_stat):
     changes(money_stat, customer_stat, reputation_stat)
@@ -392,7 +513,7 @@ def walk_away(money_stat, customer_stat, reputation_stat):
     scenario.configure(
         text="You walked away. Customers lost trust in you.")
     hide_buttons()
-    window.after(5000, lambda:next_round())
+    after_ids.append(window.after(5000, lambda: next_round()))
 
 def changes(money_stat, customer_stat, reputation_stat):
     global change_m, change_c, change_r
@@ -400,26 +521,47 @@ def changes(money_stat, customer_stat, reputation_stat):
     change_c = customer_stat
     change_r = reputation_stat
 
+
 def enable_button():
-    button1.pack()
-    button2.pack()
-    button3.pack()
+    if not button2.winfo_ismapped():
+        button2.pack()
+    if not button3.winfo_ismapped():
+        button3.pack()
 
 def next_round():
-    enable_button()
-    random_scenario()
-    game_over_check()
+    if game_over_check():
+        return
 
+    reset_buttons()
+    random_scenario()
+    
 def hide_buttons_end():
     button1.pack_forget()
     button2.pack_forget()
     button3.pack_forget()
+
+def reset_choice_buttons():
+    button1.configure(state="normal")
+    button2.configure(state="normal")
+    button3.configure(state="normal")
+
+    button1.pack()
+    button2.pack()
+    button3.pack()
 
 def hide_buttons():
     button1.pack_forget()
     button2.pack_forget()
     button3.pack_forget()
     status_change()
+
+def enable_button():
+    reset_buttons()
+
+def reset_buttons():
+    button1.pack()
+    button2.pack()
+    button3.pack()
 
 def change_color():
     global container_two
@@ -439,7 +581,7 @@ def status_change():
     )
     status_place.place(relx=0.5, rely=0.55, anchor="center")
     status_place.grid_propagate(False)
-
+    status_sound.play()
     status_place.grid_columnconfigure(0, weight=1)
     status_place.grid_columnconfigure(1, weight=1)
     status_place.grid_columnconfigure(2, weight=1)
@@ -492,7 +634,22 @@ def status_change():
             text_color="#23c463",
             )
         status_label_money.place(relx=0.5, rely=0.5, anchor="center")
+    else:  # change_m == 0
+        status_frame_money = ctk.CTkFrame(
+            status_container_money,
+            fg_color="#f5f5f5",
+            border_width=2,
+            border_color="#d0d0d0"
+        )
+        status_frame_money.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
 
+        status_label_money = ctk.CTkLabel(
+            status_frame_money,
+            text="+0 Money",
+            font=("Helvetica", 18, "bold"),
+            text_color="#808080"
+        )
+        status_label_money.place(relx=0.5, rely=0.5, anchor="center")
     #Customer Satisfaction
 
     if change_c < 0:
@@ -529,6 +686,23 @@ def status_change():
             )
         status_label_customer.place(relx=0.5, rely=0.5, anchor="center")
 
+
+    else:
+        status_frame_customer = ctk.CTkFrame(
+            status_container_customer,
+            fg_color="#f5f5f5",
+            border_width=2,
+            border_color="#d0d0d0"
+        )
+        status_frame_customer.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_customer = ctk.CTkLabel(
+            status_frame_customer,
+            text="+0 Customer Satisfaction",
+            font=("Helvetica", 18, "bold"),
+            text_color="#808080"
+        )
+        status_label_customer.place(relx=0.5, rely=0.5, anchor="center")
     #Reputation
 
     if change_r < 0:
@@ -565,19 +739,43 @@ def status_change():
             )
         status_label_reputation.place(relx=0.5, rely=0.5, anchor="center")
 
+    else:
+        status_frame_reputation = ctk.CTkFrame(
+            status_container_reputation,
+            fg_color="#f5f5f5",
+            border_width=2,
+            border_color="#d0d0d0"
+        )
+        status_frame_reputation.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.8)
+
+        status_label_reputation = ctk.CTkLabel(
+            status_frame_reputation,
+            text="+0 Reputation",
+            font=("Helvetica", 18, "bold"),
+            text_color="#808080"
+        )
+        status_label_reputation.place(relx=0.5, rely=0.5, anchor="center")
+
     status_place.after(4500, lambda: status_place.destroy())
+
+
 
 #Game Over
 def game_over_check():
-    global money, reputation, customer_satisfaction, scenario
-    if money <= 0 or reputation <= 0 or customer_satisfaction <= 0:
-        scenario.configure(text="Game Over! You ran out of money or your reputation dropped too low.")
-        hide_buttons_end()
-        lose_sound.play()
-        back_to_menu()
-    else:
-        pass
+    global game_ended
 
+    if game_ended:
+        return True
+
+    if money <= 0 or reputation <= 0 or customer_satisfaction <= 0:
+        game_ended = True
+        hide_buttons_end()
+        scenario.configure(text="Game Over!")
+        lose_sound.play()
+        after_ids.append(window.after(5000, back_to_menu))
+        return True
+
+    return False
 #BUTTONS
 
 button_frame = ctk.CTkFrame(
@@ -696,25 +894,79 @@ scenario = ctk.CTkLabel(
 # Snaps the text to the dead center of Container 2
 scenario.place(relx=0.5, rely=0.5, anchor="center")
 
-scenarios = [start_minigame]
+scenarios = [
+    price_complaint,
+    spilled_drink,
+    complains,
+    drugs,
+    toddler,
+    salty,
+    lamp,
+    newt
+]
 
 #Button for back to menu (appears after game over)
 
-def back_to_menu(): 
-    global money, customer_satisfaction, reputation, scenarios
-    money = 100
-    customer_satisfaction = 10
-    reputation = 50
-    update_label()
+def back_to_menu():
+    scenario.configure(text="Press Restart Game to play again!", fg_color="#0E3386")
+    container_two.configure(fg_color="transparent")
 
-    global scenario, button1, button2, button3
-    button1.configure(text="Restart Game", command=lambda: (random_scenario(), change_color(), menu_sound.play(), enable_button()))
-    button1.pack()
-    button2.configure(text="Quit", command=lambda: (window.destroy(), click_sound.play()))
-    button2.pack()
+    button1.configure(
+        text="Restart Game",
+        state="normal",
+        command=start_new_game
+    )
+
+    button2.configure(
+        text="Quit Game",
+        state="normal",
+        command=quit
+    )
+
+    if not button1.winfo_ismapped():
+        button1.pack()
+
+    if not button2.winfo_ismapped():
+        button2.pack()
     button3.pack_forget()
-    scenario_place.forget()
 
-    scenarios = [price_complaint, spilled_drink]
+def start_new_game():
+    reset_game()
+    scenario.configure(text="")
+    random_scenario()
+    change_color()
+    menu_sound.play()
+
+def reset_game():
+    global money, customer_satisfaction, reputation
+    global scenarios, minigame_used, game_ended, after_ids
+
+    for after_id in after_ids:
+        try:
+            window.after_cancel(after_id)
+        except:
+            pass
+
+    after_ids.clear()
+
+    money = 100
+    customer_satisfaction = 50
+    reputation = 50
+    minigame_used = False
+    game_ended = False
+
+    scenarios = [
+        price_complaint,
+        spilled_drink,
+        complains,
+        drugs,
+        toddler,
+        salty,
+        lamp,
+        newt
+    ]
+
+    update_label()
+    reset_choice_buttons()
 
 window.mainloop()
